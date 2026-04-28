@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Visualization Checklist</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a18; padding: 2rem 1rem; min-height: 100vh; }
+  .card { max-width: 680px; margin: 0 auto; background: #fff; border-radius: 16px; border: 0.5px solid #dddbd2; padding: 2rem; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #888780; margin-bottom: 24px; }
+  .section-label { font-size: 12px; font-weight: 500; color: #888780; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; }
+
+  /* Upload area */
+  .upload-area { border: 1.5px dashed #b4b2a9; border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; margin-bottom: 12px; position: relative; }
+  .upload-area:hover, .upload-area.dragover { background: #f5f4f0; border-color: #888780; }
+  .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-text { font-size: 14px; color: #5f5e5a; line-height: 1.5; }
+  .upload-text strong { color: #1a1a18; font-weight: 500; }
+  .upload-hint { font-size: 12px; color: #888780; margin-top: 4px; }
+
+  .or-divider { text-align: center; font-size: 13px; color: #b4b2a9; margin: 10px 0; }
+  .url-row { display: flex; gap: 8px; margin-bottom: 20px; }
+  .url-row input { flex: 1; padding: 9px 12px; font-size: 14px; border-radius: 8px; border: 0.5px solid #b4b2a9; background: #fff; color: #1a1a18; outline: none; }
+  .url-row input:focus { border-color: #888780; }
+  .url-row button { padding: 9px 16px; font-size: 13px; border-radius: 8px; border: 0.5px solid #b4b2a9; background: #fff; color: #1a1a18; cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .url-row button:hover { background: #f5f4f0; }
+
+  /* Preview */
+  .preview-wrap { margin-bottom: 20px; display: none; position: relative; }
+  .preview-wrap img { width: 100%; border-radius: 10px; border: 0.5px solid #dddbd2; display: block; max-height: 340px; object-fit: contain; background: #f5f4f0; }
+  .preview-remove { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.55); color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .preview-name { font-size: 12px; color: #888780; margin-top: 6px; text-align: center; }
+
+  /* Checklist */
+  .category-header { font-size: 15px; font-weight: 500; color: #1a1a18; margin: 20px 0 8px; }
+  .checklist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 8px; }
+  .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #fff; border: 0.5px solid #dddbd2; border-radius: 8px; cursor: pointer; user-select: none; transition: background 0.12s, border-color 0.12s; }
+  .check-item:hover { background: #f5f4f0; }
+  .check-item.checked { border-color: #0f6e56; background: #e1f5ee; }
+  .check-box { width: 18px; height: 18px; min-width: 18px; border: 1.5px solid #b4b2a9; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .check-item.checked .check-box { background: #0f6e56; border-color: #0f6e56; }
+  .check-mark { font-size: 11px; color: white; display: none; }
+  .check-item.checked .check-mark { display: block; }
+  .check-text { font-size: 14px; color: #1a1a18; line-height: 1.5; }
+  .check-item.checked .check-text { color: #0f6e56; }
+
+  /* Score */
+  .score-section { margin-top: 28px; padding-top: 20px; border-top: 0.5px solid #dddbd2; }
+  .score-bar-wrap { background: #f5f4f0; border-radius: 8px; height: 8px; margin-bottom: 8px; overflow: hidden; }
+  .score-bar { height: 100%; border-radius: 8px; background: #0f6e56; transition: width 0.3s; }
+  .score-label { font-size: 14px; color: #888780; }
+  .score-num { font-weight: 500; color: #1a1a18; }
+  .score-verdict { font-size: 13px; margin-top: 8px; color: #5f5e5a; min-height: 20px; }
+  .reset-btn { margin-top: 16px; padding: 8px 16px; font-size: 13px; border-radius: 8px; border: 0.5px solid #b4b2a9; background: #fff; color: #1a1a18; cursor: pointer; font-family: inherit; }
+  .reset-btn:hover { background: #f5f4f0; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Data Visualization Checklist</h1>
+  <p class="subtitle">Based on the Evergreen Data Visualization Checklist</p>
+
+  <p class="section-label">Step 1 — add your visualization</p>
+
+  <div class="upload-area" id="drop-zone">
+    <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg, image/gif, image/webp" />
+    <div class="upload-icon">🖼️</div>
+    <p class="upload-text"><strong>Click to upload</strong> or drag &amp; drop</p>
+    <p class="upload-hint">PNG, JPG, JPEG, GIF, WEBP supported</p>
+  </div>
+
+  <div class="or-divider">— or paste a URL —</div>
+
+  <div class="url-row">
+    <input id="viz-url" type="url" placeholder="https://..." />
+    <button onclick="loadUrl()">Load</button>
+  </div>
+
+  <div class="preview-wrap" id="preview-wrap">
+    <img id="preview-img" src="" alt="Your visualization" />
+    <button class="preview-remove" onclick="clearPreview()" title="Remove">✕</button>
+    <p class="preview-name" id="preview-name"></p>
+  </div>
+
+  <p class="section-label">Step 2 — rate it</p>
+
+  <div class="category-header">Text &amp; labels</div>
+  <div class="checklist" id="list-text"></div>
+
+  <div class="category-header">Arrangement</div>
+  <div class="checklist" id="list-arrange"></div>
+
+  <div class="category-header">Color</div>
+  <div class="checklist" id="list-color"></div>
+
+  <div class="category-header">Lines &amp; geometry</div>
+  <div class="checklist" id="list-lines"></div>
+
+  <div class="score-section">
+    <p class="section-label">Score</p>
+    <div class="score-bar-wrap"><div class="score-bar" id="score-bar" style="width:0%"></div></div>
+    <p class="score-label"><span class="score-num" id="score-count">0</span> / <span id="score-total">0</span> criteria met</p>
+    <p class="score-verdict" id="score-verdict"></p>
+    <button class="reset-btn" onclick="resetAll()">Reset checklist</button>
+  </div>
+</div>
+
+<script>
+const criteria = {
+  "list-text": [
+    "Has a clear, descriptive title",
+    "Axes and units are labeled",
+    "Legend is present where needed",
+    "Font sizes are readable (12px+)",
+    "No chart junk or unnecessary text",
+  ],
+  "list-arrange": [
+    "Chart type suits the data (e.g. bar for comparison, line for trends)",
+    "Categories are in a logical or ranked order",
+    "Dual axes are avoided or clearly justified",
+    "The number of series / categories is manageable",
+    "Data-to-ink ratio is high (no unnecessary decoration)",
+  ],
+  "list-color": [
+    "Color encodes meaning, not just decoration",
+    "Colorblind-accessible palette (no red-green only distinction)",
+    "Fewer than 6 distinct colors used",
+    "Background does not compete with data",
+  ],
+  "list-lines": [
+    "Grid lines are subtle or absent",
+    "Lines and bars are thick enough to see easily",
+    "No 3D effects that distort perception",
+    "Reference lines or benchmarks are present where useful",
+  ],
+};
+
+let total = 0;
+Object.entries(criteria).forEach(([id, items]) => {
+  const el = document.getElementById(id);
+  items.forEach(text => {
+    total++;
+    const div = document.createElement('div');
+    div.className = 'check-item';
+    div.innerHTML = `<div class="check-box"><span class="check-mark">✓</span></div><span class="check-text">${text}</span>`;
+    div.onclick = () => { div.classList.toggle('checked'); updateScore(); };
+    el.appendChild(div);
+  });
+});
+document.getElementById('score-total').textContent = total;
+
+// File upload
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('drop-zone');
+
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) showPreview(URL.createObjectURL(file), file.name);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) showPreview(URL.createObjectURL(file), file.name);
+});
+
+function loadUrl() {
+  const url = document.getElementById('viz-url').value.trim();
+  if (url) showPreview(url, url);
+}
+
+function showPreview(src, name) {
+  const wrap = document.getElementById('preview-wrap');
+  document.getElementById('preview-img').src = src;
+  document.getElementById('preview-name').textContent = name.length > 60 ? name.slice(0, 57) + '...' : name;
+  wrap.style.display = 'block';
+  dropZone.style.display = 'none';
+  document.querySelector('.or-divider').style.display = 'none';
+  document.querySelector('.url-row').style.display = 'none';
+}
+
+function clearPreview() {
+  document.getElementById('preview-img').src = '';
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('preview-name').textContent = '';
+  document.getElementById('viz-url').value = '';
+  fileInput.value = '';
+  dropZone.style.display = 'block';
+  document.querySelector('.or-divider').style.display = 'block';
+  document.querySelector('.url-row').style.display = 'flex';
+}
+
+function updateScore() {
+  const checked = document.querySelectorAll('.check-item.checked').length;
+  document.getElementById('score-count').textContent = checked;
+  const pct = Math.round(checked / total * 100);
+  document.getElementById('score-bar').style.width = pct + '%';
+  const verdict = document.getElementById('score-verdict');
+  if (checked === 0) { verdict.textContent = ''; return; }
+  if (pct >= 85) verdict.textContent = 'Excellent visualization!';
+  else if (pct >= 65) verdict.textContent = 'Good — a few things to improve.';
+  else if (pct >= 40) verdict.textContent = 'Needs work — several issues to address.';
+  else verdict.textContent = 'Poor — significant improvements needed.';
+}
+
+function resetAll() {
+  document.querySelectorAll('.check-item.checked').forEach(el => el.classList.remove('checked'));
+  clearPreview();
+  updateScore();
+}
+</script>
+</body>
+</html>
