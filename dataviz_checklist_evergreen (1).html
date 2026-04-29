@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Visualization Checklist — Evergreen & Emery 2016</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #0f6e56; --green-light: #e1f5ee; --green-mid: #1d9e75;
+    --amber: #ba7517; --amber-light: #faeeda;
+    --red: #a32d2d; --red-light: #fcebeb;
+    --blue: #185fa5; --blue-light: #e6f1fb;
+    --bg: #f7f5f0; --card: #ffffff;
+    --border: #e0ddd5; --border-strong: #b4b2a9;
+    --text: #1a1a18; --muted: #6b6963; --hint: #a8a49e;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1rem; min-height: 100vh; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+
+  /* Header */
+  .header { margin-bottom: 1.5rem; }
+  .header h1 { font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .header p { font-size: 13px; color: var(--muted); }
+  .header a { color: var(--green); text-decoration: none; }
+
+  /* Cards */
+  .card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; }
+  .card-title { font-size: 11px; font-weight: 500; color: var(--hint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+
+  /* Upload */
+  .upload-area { border: 1.5px dashed var(--border-strong); border-radius: 10px; padding: 28px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; background: var(--bg); }
+  .upload-area:hover, .upload-area.dragover { border-color: var(--green); background: var(--green-light); }
+  .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-text { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .upload-text strong { color: var(--text); font-weight: 500; }
+  .upload-hint { font-size: 12px; color: var(--hint); margin-top: 4px; }
+  .preview-wrap { display: none; position: relative; }
+  .preview-wrap img { width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; max-height: 300px; object-fit: contain; background: var(--bg); }
+  .preview-remove { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.55); color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* Viz name */
+  .viz-name-row { display: flex; gap: 8px; margin-top: 12px; }
+  .viz-name-row input { flex: 1; padding: 8px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: inherit; outline: none; }
+  .viz-name-row input:focus { border-color: var(--green); }
+
+  /* Section headers */
+  .section-header { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+  .section-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .section-title { font-size: 15px; font-weight: 500; }
+  .section-desc { font-size: 12px; color: var(--muted); margin: -8px 0 14px; line-height: 1.5; font-style: italic; }
+
+  /* Criteria items */
+  .criteria-item { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 8px; transition: border-color 0.15s; }
+  .criteria-item.rated-2 { border-color: var(--green-mid); background: var(--green-light); }
+  .criteria-item.rated-1 { border-color: #fac775; background: var(--amber-light); }
+  .criteria-item.rated-0 { border-color: #f09595; background: var(--red-light); }
+  .criteria-item.rated-na { border-color: var(--border-strong); background: var(--bg); }
+
+  .criteria-text { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
+  .criteria-hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+
+  .rating-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rating-btn { padding: 5px 14px; font-size: 12px; font-weight: 500; border-radius: 20px; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
+  .rating-btn:hover { border-color: var(--border-strong); color: var(--text); }
+  .rating-btn.active-2 { background: var(--green); border-color: var(--green); color: #fff; }
+  .rating-btn.active-1 { background: var(--amber); border-color: var(--amber); color: #fff; }
+  .rating-btn.active-0 { background: var(--red); border-color: var(--red); color: #fff; }
+  .rating-btn.active-na { background: var(--border-strong); border-color: var(--border-strong); color: #fff; }
+
+  /* Progress bar */
+  .progress-wrap { background: var(--bg); border-radius: 8px; height: 6px; margin: 14px 0 6px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 8px; background: var(--green); transition: width 0.3s; }
+  .progress-label { font-size: 12px; color: var(--hint); }
+
+  /* Score card */
+  .score-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; }
+  .score-top { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 4px; }
+  .score-big { font-family: 'DM Serif Display', serif; font-size: 52px; line-height: 1; }
+  .score-pct { font-size: 22px; color: var(--muted); margin-left: 4px; font-family: 'DM Serif Display', serif; }
+  .score-label { font-size: 13px; color: var(--muted); }
+  .score-bar-wrap { background: var(--bg); border-radius: 8px; height: 8px; margin: 12px 0 8px; overflow: hidden; }
+  .score-bar { height: 100%; border-radius: 8px; background: var(--green); transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+  .score-verdict { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .score-sublabel { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Critique */
+  .critique-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; display: none; }
+  .critique-section { margin-bottom: 16px; }
+  .critique-section:last-child { margin-bottom: 0; }
+  .critique-tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+  .tag-strength { background: var(--green-light); color: var(--green); }
+  .tag-improve { background: var(--red-light); color: var(--red); }
+  .tag-partial { background: var(--amber-light); color: var(--amber); }
+  .critique-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .critique-list li { font-size: 13px; line-height: 1.6; color: var(--text); padding-left: 16px; position: relative; }
+  .critique-list li::before { content: '–'; position: absolute; left: 0; color: var(--hint); }
+
+  /* Actions */
+  .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .btn-primary { padding: 10px 20px; font-size: 14px; font-weight: 500; font-family: 'DM Serif Display', serif; border-radius: 8px; border: none; background: var(--text); color: #fff; cursor: pointer; transition: opacity 0.15s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { padding: 10px 20px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.1s; }
+  .btn-secondary:hover { background: var(--bg); color: var(--text); }
+
+  .cat-progress { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cat-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); background: var(--bg); }
+  .cat-pill.complete { background: var(--green-light); color: var(--green); border-color: #9fe1cb; }
+  .cat-pill.partial { background: var(--amber-light); color: var(--amber); border-color: #fac775; }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .upload-area, .preview-wrap, .actions { display: none !important; }
+    .card, .score-card, .critique-card { border: 1px solid #ccc; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>Data Visualization Checklist</h1>
+    <p>Based on <a href="https://stephanieevergreen.com/wp-content/uploads/2016/10/DataVizChecklist_May2016.pdf" target="_blank">Evergreen &amp; Emery (2016)</a> — for each item pick: <strong>2</strong> = yes, totally &nbsp;|&nbsp; <strong>1</strong> = kind of &nbsp;|&nbsp; <strong>0</strong> = nope &nbsp;|&nbsp; <strong>N/A</strong> = doesn't apply</p>
+  </div>
+
+  <!-- Image upload -->
+  <div class="card">
+    <p class="card-title">Your chart or graph</p>
+    <div class="upload-area" id="drop-zone">
+      <input type="file" id="file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" />
+      <p class="upload-text"><strong>Click to upload</strong> or drag and drop your image here</p>
+      <p class="upload-hint">PNG, JPG, WEBP — it stays on screen while you rate it</p>
+    </div>
+    <div class="preview-wrap" id="preview-wrap">
+      <img id="preview-img" src="" alt="Your visualization" />
+      <button class="preview-remove" onclick="clearPreview()">✕</button>
+    </div>
+    <div class="viz-name-row">
+      <input id="viz-name" type="text" placeholder="What's this chart called? (optional)" />
+    </div>
+  </div>
+
+  <!-- Progress pills -->
+  <div class="cat-progress" id="cat-progress"></div>
+
+  <!-- Checklist sections will be injected here -->
+  <div id="checklist-sections"></div>
+
+  <!-- Score -->
+  <div class="score-card" id="score-card">
+    <p class="card-title">Score</p>
+    <div class="score-top">
+      <div>
+        <span class="score-big" id="score-num">0</span><span class="score-pct">%</span>
+      </div>
+      <span class="score-label" id="score-raw">0 / 0 points</span>
+    </div>
+    <div class="score-bar-wrap"><div class="score-bar" id="score-bar" style="width:0%"></div></div>
+    <p class="score-verdict" id="score-verdict"></p>
+    <p class="score-sublabel" id="score-sublabel">Rate the items above to see your score.</p>
+    <div class="actions">
+      <button class="btn-primary" onclick="generateCritique()">Show my critique</button>
+      <button class="btn-secondary" onclick="resetAll()">Start over</button>
+      <button class="btn-secondary" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <!-- Auto-generated critique -->
+  <div class="critique-card" id="critique-card">
+    <p class="card-title">Your critique — <span id="critique-name"></span></p>
+    <div id="critique-body"></div>
+  </div>
+
+</div>
+
+<script>
+const sections = [
+  {
+    id: 'text',
+    title: 'Text',
+    icon: '✦',
+    color: '#e6f1fb',
+    desc: 'There isn\'t much text on a chart — so every word needs to count.',
+    criteria: [
+      { id: 'title', text: 'The title is 6–12 words and tells you the main point', hint: 'A good title says what the chart shows, not just what it\'s about. "Sales rose 40% after the campaign" beats "Sales Chart".' },
+      { id: 'subtitle', text: 'There\'s a subtitle or extra note that adds useful context', hint: 'A subtitle can answer "so what?" or point out something specific worth noticing.' },
+      { id: 'textsize', text: 'Text gets smaller as it gets less important', hint: 'Title is biggest, then subtitle, then labels, then axis text. Nothing should be too small to read easily.' },
+      { id: 'horizontal', text: 'All text reads left to right (not sideways or tilted)', hint: 'Sideways text is hard to read. If your axis labels are tilted, try flipping the chart to a horizontal bar chart instead.' },
+      { id: 'directlabel', text: 'Labels are placed right next to the data they describe', hint: 'Don\'t make readers look back and forth between a legend and the chart. Label the lines or bars directly.' },
+      { id: 'sparingly', text: 'There are no repeated or unnecessary labels', hint: 'If you already have a y-axis scale, you don\'t also need numbers on every bar. Pick one.' },
+    ]
+  },
+  {
+    id: 'arrangement',
+    title: 'Arrangement',
+    icon: '◈',
+    color: '#eaf3de',
+    desc: 'How you arrange your chart can make it easy to understand — or easy to misread.',
+    criteria: [
+      { id: 'proportions', text: 'The sizes in the chart match the actual numbers', hint: 'If one bar looks twice as tall as another, the value should actually be twice as big. Bar charts must start at zero.' },
+      { id: 'ordered', text: 'The data is arranged in a logical order', hint: 'Things should go in an order that makes sense — biggest to smallest, by time, alphabetically, etc. Not just random.' },
+      { id: 'equidistant', text: 'The gaps between axis labels are all the same size', hint: 'If your axis goes 0, 10, 20, 30 — the spacing should look equal. Uneven gaps can make trends look distorted.' },
+      { id: 'twodim', text: 'The chart is flat (no 3D effects)', hint: '3D charts look cool but make it really hard to compare values accurately. Keep it flat.' },
+      { id: 'nodecoration', text: 'There are no decorations that don\'t help explain the data', hint: 'No clip art, no background images, no decorative borders. Everything on the chart should serve a purpose.' },
+    ]
+  },
+  {
+    id: 'color',
+    title: 'Color',
+    icon: '◉',
+    color: '#faeeda',
+    desc: 'Color should help people understand the data — not just make it look pretty.',
+    criteria: [
+      { id: 'intentional', text: 'The colors were chosen on purpose, not left as defaults', hint: 'Default rainbow colors usually don\'t mean anything. Pick colors that fit the topic or highlight what matters.' },
+      { id: 'highlight', text: 'The most important data stands out in color; the rest is gray', hint: 'Use a bright or bold color for the key finding, and keep everything else light or gray so it doesn\'t compete.' },
+      { id: 'bw', text: 'You can still read the chart if it\'s printed in black and white', hint: 'Print it out in grayscale — can you still tell the difference between the data? If not, add patterns or labels.' },
+      { id: 'colorblind', text: 'The chart works for people who can\'t see red and green together', hint: 'About 1 in 12 men has color blindness. Avoid using red and green next to each other to show different things.' },
+      { id: 'contrast', text: 'Text is easy to read against the background', hint: 'Dark text on a light background is easiest to read. Avoid light text on light backgrounds.' },
+    ]
+  },
+  {
+    id: 'lines',
+    title: 'Lines',
+    icon: '≡',
+    color: '#fbeaf0',
+    desc: 'Too many lines — grid lines, borders, tick marks — add noise. Remove them if they\'re not helping.',
+    criteria: [
+      { id: 'gridlines', text: 'Grid lines (if any) are light gray and subtle', hint: 'Grid lines should be barely visible — a quiet guide, not a cage. Or just remove them entirely.' },
+      { id: 'noborder', text: 'There\'s no box or border around the chart', hint: 'A border around the whole chart adds clutter without adding information. Let the chart breathe.' },
+      { id: 'noticks', text: 'There are no unnecessary tick marks on the axes', hint: 'Tick marks are small dashes on axes. They\'re only really useful in line charts. Remove them everywhere else.' },
+      { id: 'oneaxis', text: 'There is only one left axis — no second axis on the right', hint: 'Two y-axes are confusing. If you need two, make two separate charts instead.' },
+    ]
+  },
+  {
+    id: 'overall',
+    title: 'Overall',
+    icon: '★',
+    color: '#e1f5ee',
+    desc: 'Step back and look at the big picture — does this chart actually do its job?',
+    criteria: [
+      { id: 'finding', text: 'The chart has a clear point — you know what it\'s trying to say', hint: 'Every chart should answer a question or show something worth noticing. If you can\'t say what the point is, it needs work.' },
+      { id: 'type', text: 'The right type of chart was used for this data', hint: 'Trends over time → line chart. Comparing groups → bar chart. Parts of a whole → stacked bar (not a pie with 9 slices).' },
+      { id: 'precision', text: 'Numbers are only as detailed as they need to be', hint: 'Most charts for general audiences don\'t need 4 decimal places. Round to what\'s actually useful.' },
+      { id: 'coherent', text: 'Everything in the chart works together to tell one clear story', hint: 'The title, colors, chart type, and labels should all point to the same message. If they\'re sending mixed signals, simplify.' },
+    ]
+  },
+];
+
+const ratings = {};
+let naItems = new Set();
+
+// Build checklist
+const container = document.getElementById('checklist-sections');
+const catProgress = document.getElementById('cat-progress');
+
+sections.forEach(sec => {
+  // Category pill
+  const pill = document.createElement('div');
+  pill.className = 'cat-pill';
+  pill.id = `pill-${sec.id}`;
+  pill.textContent = sec.title + ' 0/' + sec.criteria.length;
+  catProgress.appendChild(pill);
+
+  // Section card
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="section-header">
+      <div class="section-icon" style="background:${sec.color};">${sec.icon}</div>
+      <span class="section-title">${sec.title}</span>
+    </div>
+    <p class="section-desc">${sec.desc}</p>
+    <div id="items-${sec.id}"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="bar-${sec.id}" style="width:0%"></div></div>
+    <p class="progress-label" id="label-${sec.id}">0 of ${sec.criteria.length} rated</p>
+  `;
+  container.appendChild(card);
+
+  const itemsEl = card.querySelector(`#items-${sec.id}`);
+  sec.criteria.forEach(cr => {
+    const key = `${sec.id}-${cr.id}`;
+    ratings[key] = null;
+
+    const div = document.createElement('div');
+    div.className = 'criteria-item';
+    div.id = `item-${key}`;
+    div.innerHTML = `
+      <p class="criteria-text">${cr.text}</p>
+      <p class="criteria-hint">${cr.hint}</p>
+      <div class="rating-row">
+        <button class="rating-btn" data-key="${key}" data-val="2">2 — Yes, totally</button>
+        <button class="rating-btn" data-key="${key}" data-val="1">1 — Kind of</button>
+        <button class="rating-btn" data-key="${key}" data-val="0">0 — Nope</button>
+        <button class="rating-btn" data-key="${key}" data-val="na">N/A</button>
+      </div>
+    `;
+    itemsEl.appendChild(div);
+  });
+});
+
+// Rating click handler
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.rating-btn');
+  if (!btn) return;
+  const key = btn.dataset.key;
+  const val = btn.dataset.val;
+
+  ratings[key] = val === 'na' ? 'na' : parseInt(val);
+  if (val === 'na') naItems.add(key); else naItems.delete(key);
+
+  // Update buttons
+  const row = btn.closest('.rating-row');
+  row.querySelectorAll('.rating-btn').forEach(b => b.className = 'rating-btn');
+  btn.classList.add(`active-${val}`);
+
+  // Update item style
+  const item = document.getElementById(`item-${key}`);
+  item.className = `criteria-item rated-${val}`;
+
+  updateProgress();
+  updateScore();
+});
+
+function updateProgress() {
+  sections.forEach(sec => {
+    const keys = sec.criteria.map(cr => `${sec.id}-${cr.id}`);
+    const rated = keys.filter(k => ratings[k] !== null).length;
+    const pct = Math.round(rated / keys.length * 100);
+    document.getElementById(`bar-${sec.id}`).style.width = pct + '%';
+    document.getElementById(`label-${sec.id}`).textContent = `${rated} of ${keys.length} rated`;
+
+    const pill = document.getElementById(`pill-${sec.id}`);
+    pill.textContent = `${sec.title} ${rated}/${keys.length}`;
+    pill.className = 'cat-pill' + (rated === keys.length ? ' complete' : rated > 0 ? ' partial' : '');
+  });
+}
+
+function updateScore() {
+  const allKeys = Object.keys(ratings).filter(k => ratings[k] !== null && ratings[k] !== 'na');
+  const naKeys = Object.keys(ratings).filter(k => ratings[k] === 'na');
+  const earned = allKeys.reduce((s, k) => s + ratings[k], 0);
+  const possible = allKeys.length * 2;
+  const pct = possible > 0 ? Math.round(earned / possible * 100) : 0;
+
+  document.getElementById('score-num').textContent = pct;
+  document.getElementById('score-raw').textContent = `${earned} / ${possible} points (${naKeys.length} N/A)`;
+  document.getElementById('score-bar').style.width = pct + '%';
+
+  const verdict = document.getElementById('score-verdict');
+  const sub = document.getElementById('score-sublabel');
+
+  if (possible === 0) { verdict.textContent = ''; sub.textContent = 'Rate the items above to see your score.'; return; }
+
+  if (pct >= 90) {
+    verdict.textContent = 'Great chart!';
+    sub.textContent = 'Charts that score 90%+ are easy for people to read, understand, and remember.';
+    document.getElementById('score-bar').style.background = 'var(--green)';
+  } else if (pct >= 70) {
+    verdict.textContent = 'Pretty good — just a few things to fix';
+    sub.textContent = 'You\'re close! Work on the items you rated 0 or 1 to get into the great range.';
+    document.getElementById('score-bar').style.background = 'var(--green-mid)';
+  } else if (pct >= 50) {
+    verdict.textContent = 'Needs some work';
+    sub.textContent = 'There are a few problems worth fixing. Start with the red items.';
+    document.getElementById('score-bar').style.background = 'var(--amber)';
+  } else {
+    verdict.textContent = 'Needs a lot of work';
+    sub.textContent = 'Quite a few things are off. Start with the text and arrangement sections first.';
+    document.getElementById('score-bar').style.background = 'var(--red)';
+  }
+}
+
+function generateCritique() {
+  const strengths = [], improvements = [], partial = [];
+  sections.forEach(sec => {
+    sec.criteria.forEach(cr => {
+      const key = `${sec.id}-${cr.id}`;
+      const val = ratings[key];
+      if (val === null || val === 'na') return;
+      const entry = { text: cr.text, section: sec.title };
+      if (val === 2) strengths.push(entry);
+      else if (val === 1) partial.push(entry);
+      else improvements.push(entry);
+    });
+  });
+
+  const name = document.getElementById('viz-name').value.trim() || 'this visualization';
+  document.getElementById('critique-name').textContent = name;
+
+  let html = '';
+
+  if (strengths.length) {
+    html += `<div class="critique-section">
+      <span class="critique-tag tag-strength">✓ What's working (${strengths.length})</span>
+      <ul class="critique-list">${strengths.map(s => `<li><strong>${s.section}:</strong> ${s.text}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  if (partial.length) {
+    html += `<div class="critique-section">
+      <span class="critique-tag tag-partial">~ Almost there (${partial.length})</span>
+      <ul class="critique-list">${partial.map(s => `<li><strong>${s.section}:</strong> ${s.text}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  if (improvements.length) {
+    html += `<div class="critique-section">
+      <span class="critique-tag tag-improve">✗ Needs fixing (${improvements.length})</span>
+      <ul class="critique-list">${improvements.map(s => `<li><strong>${s.section}:</strong> ${s.text}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  const pct = parseInt(document.getElementById('score-num').textContent);
+  let summary = '';
+  if (pct >= 90) summary = `<strong>${name}</strong> scores ${pct}% — great job! It follows most of the Evergreen & Emery guidelines and should be easy for anyone to read and understand.`;
+  else if (pct >= 70) summary = `<strong>${name}</strong> scores ${pct}% — pretty good! A few small fixes would make it even better.`;
+  else if (pct >= 50) summary = `<strong>${name}</strong> scores ${pct}%. It gets some things right, but there are a few clear issues worth fixing — especially the ones listed below.`;
+  else summary = `<strong>${name}</strong> scores ${pct}%. There's quite a bit to improve. Start with the "Needs fixing" list and work your way up.`;
+
+  html = `<div class="critique-section"><p style="font-size:14px; line-height:1.7; color:var(--text);">${summary}</p></div>` + html;
+
+  if (!strengths.length && !partial.length && !improvements.length) {
+    html = '<p style="font-size:14px; color:var(--muted);">Go rate some items above first, then come back here!</p>';
+  }
+
+  document.getElementById('critique-body').innerHTML = html;
+  const critiqueCard = document.getElementById('critique-card');
+  critiqueCard.style.display = 'block';
+  critiqueCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// File upload
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('drop-zone');
+
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) showPreview(URL.createObjectURL(file));
+});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) showPreview(URL.createObjectURL(file));
+});
+
+function showPreview(src) {
+  document.getElementById('preview-img').src = src;
+  document.getElementById('preview-wrap').style.display = 'block';
+  document.getElementById('drop-zone').style.display = 'none';
+}
+function clearPreview() {
+  document.getElementById('preview-img').src = '';
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  fileInput.value = '';
+}
+
+function resetAll() {
+  Object.keys(ratings).forEach(k => ratings[k] = null);
+  naItems.clear();
+  document.querySelectorAll('.criteria-item').forEach(el => el.className = 'criteria-item');
+  document.querySelectorAll('.rating-btn').forEach(el => el.className = 'rating-btn');
+  document.getElementById('critique-card').style.display = 'none';
+  document.getElementById('viz-name').value = '';
+  clearPreview();
+  updateProgress();
+  updateScore();
+}
+</script>
+</body>
+</html>
